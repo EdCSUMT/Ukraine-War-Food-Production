@@ -15,11 +15,12 @@ class BlessCSV:
     dfs_list = []
 
 # try/exception for non existing directories and make directories if that is the case
-    def __init__(self, input_director, output_directory):
+    def __init__(self, input_director, output_directory = orig_data_dir):
         self.orig_data_dir = input_director
         self.modified_output_dir = output_directory
         print("hereeeeeeeeeeeee")
-        self.dfs_dict = self.prepared_df_list()
+        self.dfs_dict = self.prepare_df_dict()
+        print("second here!!!!!!")
 
     # might use func later to change paths from default one
     # if the element contains character that will be escape char, replace it
@@ -43,6 +44,7 @@ class BlessCSV:
     # returns a list of all files in a directory
     # Suggested improvments: filter the files so that only .bin are returned
     def files_in_dir(self, directory):
+        print(directory)
         return os.listdir(directory)
 
     ''' 
@@ -68,9 +70,9 @@ class BlessCSV:
             filename = name_string
         return file_name
 
-    def open_file(self, data_dir, file_name):
+    def open_file(self, file_name):
         print("FIle name:" + file_name)
-        file_path = data_dir + '/' + file_name
+        file_path = self.orig_data_dir + '/' + file_name
         file_df = pd.read_csv(file_path)
         return file_df
     '''This function stores a list of pointers to all the open files. This is done for DRY coding principles and 
@@ -79,20 +81,29 @@ class BlessCSV:
     in an array for each successive function, rather than reopening the files.
     Possible improvement: set a streamed buffer
     '''
-    def prepared_df_list(self):
-
+    def prepare_df_dict(self):
+        print(self.orig_data_dir)
+        print("reached prepare_df_dict")
         files = self.files_in_dir(self.orig_data_dir)
-
+        print(files)
+        print("before for loop in prepare_df_dict")
         for file in files:
             file_df = self.open_file(file)
+            print("in for loop in ")
             self.dfs_dict[file] = file_df
-
+        print(self.dfs_dict)
         return self.dfs_dict
 
-    def prepared_df_list(self, directory = modified_output_dir):
-        files = directory
+    def prepare_df_list(self, directory = modified_output_dir):
+        print("HEEEEEEEEEEEEEEEEEE")
+        print(directory)
+        files = self.files_in_dir(directory)
         for file in files:
-            file_df = self.open_file(self.orig_data_dir, file)
+            print("hhhhhhhhhhhhhhhh")
+            print(file)
+            file_df = self.open_file(directory, file)
+            print(file_df)
+            print(file)
             self.dfs_list.append(file_df)
             #print(self.df_list)
         return self.dfs_list
@@ -104,10 +115,11 @@ class BlessCSV:
     # suggested improvement: function that allows other naming ways so we are not statically tied to "entitiy, entitiy_code, etc)
     # !!!!!!!!!!!!!!!!!!!!!!!!!!! fix it to be in compliance with DRY with prepared_df_list
     def change_col_name(self, col_number = 3):
-
+        print("reached change col name")
         for entry in self.dfs_dict.items():
             file_name = entry[0]
             file_df = entry[1]
+            print("here is good")
             file_df.columns = ['Entity', 'Entity_Code', 'Year', self.col_name(file_name)]
             file_name = self.modified_output_dir + file_name
             file_df.to_csv(file_name, index=False)
@@ -118,15 +130,12 @@ class BlessCSV:
     #print(df0)
     # Suggested improvements!! can make the first file to be selectable
     def left_join_files_in_dir(self, directory = modified_output_dir, join_on = ('Entity', 'Code', 'Year'), merge_modified_file = True):
-        first_df = []
-        if merge_modified_file:
-            first_df = self.prepared_df_list()
         #  starting df
-        ##first_df = next(iter(self.dfs_dict.values()))
-        #for df in list(self.dfs_dict.values())[1:] :
-        #    first_df = first_df.merge(df, how = "left", on = join_on)
+        first_df = next(iter(self.dfs_dict.values()))
+        for df in list(self.dfs_dict.values())[1:] :
+         first_df = first_df.merge(df, how = "left", on = join_on)
         #print(first_df)
-        #return first_df
+        return first_df
 
 
 
@@ -148,6 +157,6 @@ if __name__ == '__main__':
     test1 = BlessCSV(orig_data_dir, modified_output_dir)
     test1.change_col_name(3)
 
-    test2 = BlessCSV(orig_data_dir, modified_output_dir)
+    test2 = BlessCSV(modified_output_dir, modified_output_dir)
     test2.left_join_files_in_dir().to_csv(modified_output_dir + 'test1.csv', index=False)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
