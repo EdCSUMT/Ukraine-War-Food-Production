@@ -71,7 +71,7 @@ class BlessCSV:
         return file_name
 
     def open_file(self, file_name):
-        print("FIle name:" + file_name)
+
         file_path = self.orig_data_dir + '/' + file_name
         file_df = pd.read_csv(file_path)
         return file_df
@@ -82,16 +82,12 @@ class BlessCSV:
     Possible improvement: set a streamed buffer
     '''
     def prepare_df_dict(self):
-        print(self.orig_data_dir)
-        print("reached prepare_df_dict")
         files = self.files_in_dir(self.orig_data_dir)
-        print(files)
-        print("before for loop in prepare_df_dict")
         for file in files:
             file_df = self.open_file(file)
-            print("in for loop in ")
+
             self.dfs_dict[file] = file_df
-        print(self.dfs_dict)
+
         return self.dfs_dict
 
     '''
@@ -102,26 +98,25 @@ class BlessCSV:
     # suggested improvement: function that allows other naming ways so we are not statically tied to "entitiy, entitiy_code, etc)
     # !!!!!!!!!!!!!!!!!!!!!!!!!!! fix it to be in compliance with DRY with prepared_df_list
     def change_col_name(self, col_number = 3):
-        print("reached change col name")
+
         for entry in self.dfs_dict.items():
             file_name = entry[0]
             file_df = entry[1]
-            print("here is good")
+
             file_df.columns = ['Entity', 'Entity_Code', 'Year', self.col_name(file_name)]
             file_name = self.modified_output_dir + file_name
             file_df.to_csv(file_name, index=False)
             print("Updating and saving file" + file_name)
 
-    #df0 = df_list[0]
-    #df0= df0.join(df_list[1], on = ('Entity', 'Year'))
-    #print(df0)
+
     # Suggested improvements!! can make the first file to be selectable
-    def left_join_files_in_dir(self, directory = modified_output_dir, join_on = ('Entity', 'Code', 'Year'), merge_modified_file = True):
+    # This function could use a lot of improvement and error checking
+    def left_join_files_in_dir(self, directory = modified_output_dir, join_on = ('Entity', 'Entity_Code', 'Year'), merge_modified_file = True):
         #  starting df
         first_df = next(iter(self.dfs_dict.values()))
         for df in list(self.dfs_dict.values())[1:] :
-         first_df = first_df.merge(df, how = "left", on = join_on)
-        #print(first_df)
+            print(df)
+            first_df = first_df.merge(df, how = "left", on = join_on)
         return first_df
 
 
@@ -140,10 +135,12 @@ class BlessCSV:
 if __name__ == '__main__':
     orig_data_dir = 'C:/Users\Ed-Ryzen-Desktop/OneDrive - The University of Montana\Data Analytics/Famine Impact/Original Data/Food Production'
     modified_output_dir = 'C:/Users\Ed-Ryzen-Desktop/OneDrive - The University of Montana\Data Analytics/Famine Impact/Modified Data/Food Production Updated Col Names/'
-    print("The original data directory: "+ orig_data_dir)
+    orig_data_dir1 = modified_output_dir
+    modified_output_dir1 = 'C:/Users\Ed-Ryzen-Desktop/OneDrive - The University of Montana\Data Analytics/Famine Impact/Modified Data/'
+
     test1 = BlessCSV(orig_data_dir, modified_output_dir)
     test1.change_col_name(3)
 
-    test2 = BlessCSV(orig_data_dir, modified_output_dir)
-    test2.left_join_files_in_dir().to_csv(modified_output_dir + 'test1.csv', index=False)
+    test2 = BlessCSV(modified_output_dir, modified_output_dir)
+    test2.left_join_files_in_dir().to_csv(modified_output_dir + 'AllFoodProduction.csv', index=False)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
