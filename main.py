@@ -94,19 +94,6 @@ class BlessCSV:
         print(self.dfs_dict)
         return self.dfs_dict
 
-    def prepare_df_list(self, directory = modified_output_dir):
-        print("HEEEEEEEEEEEEEEEEEE")
-        print(directory)
-        files = self.files_in_dir(directory)
-        for file in files:
-            print("hhhhhhhhhhhhhhhh")
-            print(file)
-            file_df = self.open_file(directory, file)
-            print(file_df)
-            print(file)
-            self.dfs_list.append(file_df)
-            #print(self.df_list)
-        return self.dfs_list
     '''
     This function opens each file in the input_directory (input_dir arguement), changes the col name, saves
     the file to the output_dir
@@ -157,6 +144,6 @@ if __name__ == '__main__':
     test1 = BlessCSV(orig_data_dir, modified_output_dir)
     test1.change_col_name(3)
 
-    test2 = BlessCSV(modified_output_dir, modified_output_dir)
+    test2 = BlessCSV(orig_data_dir, modified_output_dir)
     test2.left_join_files_in_dir().to_csv(modified_output_dir + 'test1.csv', index=False)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
