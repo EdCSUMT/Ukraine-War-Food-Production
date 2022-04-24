@@ -11,14 +11,15 @@ class BlessCSV:
     # food original data path
     orig_data_dir = 'C:/Users\Ed-Ryzen-Desktop/OneDrive - The University of Montana\Data Analytics/Famine Impact/Original Data/Food Production'
     modified_output_dir = 'C:/Users\Ed-Ryzen-Desktop/OneDrive - The University of Montana\Data Analytics/Famine Impact/Modified Data/Food Production Updated Col Names/'
-    df_list = {}
+    dfs_dict = {}
+    dfs_list = []
 
 # try/exception for non existing directories and make directories if that is the case
     def __init__(self, input_director, output_directory):
         self.orig_data_dir = input_director
         self.modified_output_dir = output_directory
         print("hereeeeeeeeeeeee")
-        self.df_list = self.prepared_df_list()
+        self.dfs_dict = self.prepared_df_list()
 
     # might use func later to change paths from default one
     # if the element contains character that will be escape char, replace it
@@ -40,9 +41,9 @@ class BlessCSV:
         return self.orig_data_dir
 
     # returns a list of all files in a directory
-    # filter the files so that only .bin are returned
-    def files_in_dir(self):
-        return os.listdir(self.orig_data_dir)
+    # Suggested improvments: filter the files so that only .bin are returned
+    def files_in_dir(self, directory):
+        return os.listdir(directory)
 
     ''' 
     By default, the col will be renamed with a string that is the name of the file + "(in tons)
@@ -58,6 +59,7 @@ class BlessCSV:
         else:
             col_name = name_string
         return col_name
+
     def file_name(self, filename, default_naming=True, name_string = ''):
         if (default_naming):
             file_name_prep = filename.split('.')
@@ -66,8 +68,9 @@ class BlessCSV:
             filename = name_string
         return file_name
 
-    def open_file(self, file_name):
-        file_path = self.orig_data_dir + '/' + file_name
+    def open_file(self, data_dir, file_name):
+        print("FIle name:" + file_name)
+        file_path = data_dir + '/' + file_name
         file_df = pd.read_csv(file_path)
         return file_df
     '''This function stores a list of pointers to all the open files. This is done for DRY coding principles and 
@@ -77,12 +80,22 @@ class BlessCSV:
     Possible improvement: set a streamed buffer
     '''
     def prepared_df_list(self):
-        files = self.files_in_dir()
+
+        files = self.files_in_dir(self.orig_data_dir)
+
         for file in files:
             file_df = self.open_file(file)
-            self.df_list[file] = file_df
+            self.dfs_dict[file] = file_df
+
+        return self.dfs_dict
+
+    def prepared_df_list(self, directory = modified_output_dir):
+        files = directory
+        for file in files:
+            file_df = self.open_file(self.orig_data_dir, file)
+            self.dfs_list.append(file_df)
             #print(self.df_list)
-        return self.df_list
+        return self.dfs_list
     '''
     This function opens each file in the input_directory (input_dir arguement), changes the col name, saves
     the file to the output_dir
@@ -91,8 +104,8 @@ class BlessCSV:
     # suggested improvement: function that allows other naming ways so we are not statically tied to "entitiy, entitiy_code, etc)
     # !!!!!!!!!!!!!!!!!!!!!!!!!!! fix it to be in compliance with DRY with prepared_df_list
     def change_col_name(self, col_number = 3):
-        #print("got here succesffully")
-        for entry in self.df_list.items():
+
+        for entry in self.dfs_dict.items():
             file_name = entry[0]
             file_df = entry[1]
             file_df.columns = ['Entity', 'Entity_Code', 'Year', self.col_name(file_name)]
@@ -104,12 +117,18 @@ class BlessCSV:
     #df0= df0.join(df_list[1], on = ('Entity', 'Year'))
     #print(df0)
     # Suggested improvements!! can make the first file to be selectable
-    def inner_join_files_in_dir(self, joined_name = 'joined_file', join_on = ('Entity', 'Year')):
-        print(self.df_list)
-        df0 = self.df_list[0]
-        for df in self.df_list[1:]:
-            df0 = df0.join(df, on = join_on)
-        return df0
+    def left_join_files_in_dir(self, directory = modified_output_dir, join_on = ('Entity', 'Code', 'Year'), merge_modified_file = True):
+        first_df = []
+        if merge_modified_file:
+            first_df = self.prepared_df_list()
+        #  starting df
+        ##first_df = next(iter(self.dfs_dict.values()))
+        #for df in list(self.dfs_dict.values())[1:] :
+        #    first_df = first_df.merge(df, how = "left", on = join_on)
+        #print(first_df)
+        #return first_df
+
+
 
 
     def print_hi(name):
@@ -125,10 +144,10 @@ class BlessCSV:
 if __name__ == '__main__':
     orig_data_dir = 'C:/Users\Ed-Ryzen-Desktop/OneDrive - The University of Montana\Data Analytics/Famine Impact/Original Data/Food Production'
     modified_output_dir = 'C:/Users\Ed-Ryzen-Desktop/OneDrive - The University of Montana\Data Analytics/Famine Impact/Modified Data/Food Production Updated Col Names/'
+    print("The original data directory: "+ orig_data_dir)
     test1 = BlessCSV(orig_data_dir, modified_output_dir)
     test1.change_col_name(3)
-#change_col_name(orig_data_dir, modified_output_dir, '../Modified Data/Food Production Updated Col Names/')
-    test2 = BlessCSV(orig_data_dir, modified_output_dir)
 
-   #print(test2.inner_join_files_in_dir())
+    test2 = BlessCSV(orig_data_dir, modified_output_dir)
+    test2.left_join_files_in_dir().to_csv(modified_output_dir + 'test1.csv', index=False)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
